@@ -10,14 +10,18 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import edu.rosehulman.keinslc.historicaldocs.fragments.AboutFragment;
+import edu.rosehulman.keinslc.historicaldocs.fragments.DocDetailFragment;
+import edu.rosehulman.keinslc.historicaldocs.fragments.DocListFragment;
+import edu.rosehulman.keinslc.historicaldocs.utils.Constants;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, DocListFragment.OnDocSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,10 +46,11 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-//        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-//        ft.add(R.id.fragment_container, new AboutFragment());
-//        ft.commit();
+        if (savedInstanceState == null) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.add(R.id.fragment_container, new AboutFragment());
+            ft.commit();
+        }
     }
 
     @Override
@@ -89,16 +94,31 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_about:
                 switchTo = new AboutFragment();
                 break;
-
+            case R.id.nav_docs:
+                switchTo = new DocListFragment();
+                break;
         }
 
         if (switchTo != null) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.replace(R.id.fragment_container, switchTo);
+            // Clears the backstack
+            for (int i = 0; i < getSupportFragmentManager().getBackStackEntryCount(); i++) {
+                getSupportFragmentManager().popBackStackImmediate();
+            }
             ft.commit();
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onDocSelected(Doc doc) {
+        Log.d(Constants.TAG, "Doc selected " + doc.toString());
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.fragment_container, DocDetailFragment.newInstance(doc));
+        ft.addToBackStack("detail");
+        ft.commit();
     }
 }
